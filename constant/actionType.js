@@ -1,0 +1,2 @@
+const LOADPOST = "LOADPOST";
+export {LOADPOST};

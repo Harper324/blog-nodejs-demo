@@ -1,57 +1,103 @@
 import React from "react";
-import axios from "axios";
-import download from "js-file-download";
+import NewPost from "./NewPost";
+import PostsList from "./PostsList";
+import Login from "./Login";
+import Home from "./Home";
+import {
+  BrowserRouter as Router,
+  Route,
+  Link,
+  Redirect,
+  Switch
+} from "react-router-dom";
+import { ApolloProvider } from "@apollo/react-hooks";
+import { useQuery } from '@apollo/react-hooks';
+import { gql } from 'apollo-boost';
+import ApolloClient from 'apollo-boost';
+
+
 
 class App extends React.Component {
   constructor(props) {
     super(props);
+
     this.state = {
-      uploadFile: null
+      currentUser: null
     };
-  }
-
-  handleChange(event) {
-    this.setState({
-      uploadFile: event.target.files[0]
-    });
-  }
-
-  handleClick() {
-    const data = new FormData();
-    data.append("file", this.state.uploadFile);
-    axios.post("http://localhost:8080/upload", data, {}).then(res => {
-      console.log("Upload success!", res.statusText);
-    });
-  }
-
-  download() {
-    axios.get("http://localhost:8080/download").then(res => {
-      download(res.data, "download");
-      console.log("Download success", res.statusText);
-    });
   }
 
   render() {
     return (
-      <dir>
-        <div className="upload">
-          <h1>Upload your file here!</h1>
-          <input
-            type="file"
-            name="file"
-            onChange={this.handleChange.bind(this)}
-          />
-          <button type="button" onClick={this.handleClick.bind(this)}>
-            Upload
-          </button>
+      <ApolloProvider client={client}>
+        <div>
+          <ExchangeRates />
+          <Router>
+            <Route path="/" component={Home}></Route>
+            <Route path="/posts" component={PostsList}></Route>
+            <Route path="/login" component={Login}></Route>
+          </Router>
         </div>
-        <div className="download">
-          <h1>Download your file here!</h1>
-          <button type="button" onClick={this.download.bind(this)}></button>
-        </div>
-      </dir>
+      </ApolloProvider>
     );
   }
+}
+
+const client = new ApolloClient({
+  uri: "https://api.news-lifestyle-staging.realestate.com.au/graphql"
+});
+// or you can use `import gql from 'graphql-tag';` instead
+
+
+
+
+const EXCHANGE_RATES = gql`
+{
+  related_posts_by_id(id: 140496) {
+    total
+    posts {
+      id
+      date
+      fields {
+        galleries {
+          title
+        }
+      }
+    }
+  }
+  posts(id: 140496) {
+    posts {
+      title
+      fields {
+        galleries {
+          title
+        }
+      }
+    }
+  }
+}
+`;
+
+client
+  .query({
+    query: EXCHANGE_RATES
+  })
+  .then(result => console.log(result));
+
+function ExchangeRates() {
+  const { loading, error, data } = useQuery(EXCHANGE_RATES);
+
+  if (loading) return <p>Loading...</p>;
+  if (error) return <p>Error :(</p>;
+
+  // return data.rates.map(({ currency, rate }) => (
+  //   <div key={currency}>
+  //     <p>
+  //       {currency}: {rate}
+  //     </p>
+  //   </div>
+  return (
+    <dir>hhhhhh</dir>
+  )
 }
 
 export default App;
